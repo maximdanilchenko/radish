@@ -1,0 +1,8 @@
+*.pyc
+/.idea
+*.cache
+*__pycache__
+.coverage
+.pytest_cache
+*.pyx
+.benchmarks
