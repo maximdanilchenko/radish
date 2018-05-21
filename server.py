@@ -1,6 +1,8 @@
 import asyncio
 
-from protocol import (Error, RadishBadRequest, RadishConnectionError, RadishProtocol)
+from protocol import (Error, RadishBadRequest, RadishConnectionError,
+                      process_response,
+                      process_request)
 
 
 class RadishStore:
@@ -85,11 +87,10 @@ class RadishStore:
 store = RadishStore()
 
 
-async def processor(reader: asyncio.StreamReader, writer: asyncio.StreamWriter):
-    proto = RadishProtocol()
+async def handler(reader: asyncio.StreamReader, writer: asyncio.StreamWriter):
     while 1:
         try:
-            request = await proto.process_request(reader)
+            request = await process_request(reader)
         except RadishConnectionError:
             writer.close()
             print('closed')
@@ -100,7 +101,7 @@ async def processor(reader: asyncio.StreamReader, writer: asyncio.StreamWriter):
             print(request)
             if not isinstance(request, list):
                 answer = Error(b'Bad request format')
-                await proto.process_response(writer, answer)
+                await process_response(writer, answer)
                 writer.close()
                 break
             try:
@@ -112,13 +113,13 @@ async def processor(reader: asyncio.StreamReader, writer: asyncio.StreamWriter):
                 print('closed')
                 break
         print(answer)
-        await proto.process_response(writer, answer)
+        await process_response(writer, answer)
 
 
 def run(host='127.0.0.1', port=7272, loop=None):
     if loop is None:
         loop = asyncio.get_event_loop()
-    coro = asyncio.start_server(processor, host, port, loop=loop)
+    coro = asyncio.start_server(handler, host, port, loop=loop)
 
     server = loop.run_until_complete(coro)
 
