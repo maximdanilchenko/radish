@@ -5,9 +5,9 @@ _Inspired by [this article](http://charlesleifer.com/blog/building-a-simple-redi
 
 | File | Description |
 | :--- | :---------- |
-| protocol.py | Simplified RESP (REdis Serialization Protocol) realization |
-| server.py | Server based on toy memory storage with some most common REDIS operations |
-| client.py | Multiple clients emulation |
+| [protocol.py](./protocol.py) | Simplified RESP (REdis Serialization Protocol) realization |
+| [server.py](./server.py) | Server based on toy memory storage with some most common REDIS operations |
+| [client.py](./client.py) | Multiple clients emulation |
 
 
 #### Requires:
