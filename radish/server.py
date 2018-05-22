@@ -1,8 +1,12 @@
+import logging
 import asyncio
 
-from protocol import (Error, RadishBadRequest, RadishConnectionError,
-                      process_response,
-                      process_request)
+from radish.protocol import (Error, RadishBadRequest, RadishConnectionError,
+                             process_reader,
+                             process_writer)
+
+
+__all__ = 'run'
 
 
 class RadishStore:
@@ -26,22 +30,22 @@ class RadishStore:
         try:
             return self.commands[command.upper()](*args)
         except KeyError:
-            raise RadishBadRequest('Bad command')
+            raise RadishBadRequest(b'Bad command')
 
     def get(self, *args):
         if len(args) != 1:
-            raise RadishBadRequest('Wrong number of arguments for GET')
+            raise RadishBadRequest(b'Wrong number of arguments for GET')
         return self._store.get(args[0])
 
     def set(self, *args):
         if len(args) != 2:
-            raise RadishBadRequest('Wrong number of arguments for SET')
+            raise RadishBadRequest(b'Wrong number of arguments for SET')
         self._store[args[0]] = args[1]
         return 1
 
     def delete(self, *args):
         if len(args) != 1:
-            raise RadishBadRequest('Wrong number of arguments for GET')
+            raise RadishBadRequest(b'Wrong number of arguments for GET')
         try:
             del self._store[args[0]]
             return 1
@@ -55,12 +59,12 @@ class RadishStore:
 
     def exists(self, *args):
         if not args:
-            raise RadishBadRequest('Wrong number of arguments for EXISTS')
+            raise RadishBadRequest(b'Wrong number of arguments for EXISTS')
         return sum(1 if key in self._store else 0 for key in args)
 
     def echo(self, *args):
         if not args:
-            raise RadishBadRequest('Wrong number of arguments for ECHO')
+            raise RadishBadRequest(b'Wrong number of arguments for ECHO')
         return args[0]
 
     def ping(self, *args):
@@ -69,18 +73,18 @@ class RadishStore:
         return args[0]
 
     def quit(self, *args):
-        raise RadishConnectionError('QUIT command')
+        raise RadishConnectionError(b'QUIT command')
 
     def mset(self, *args):
         if not args or len(args) % 2:
-            raise RadishBadRequest('Wrong number of arguments for MSET')
+            raise RadishBadRequest(b'Wrong number of arguments for MSET')
         lst_it = iter(args)
         for key, val in zip(lst_it, lst_it):
             self._store[key] = val
 
     def mget(self, *args):
         if not args:
-            raise RadishBadRequest('Wrong number of arguments for MGET')
+            raise RadishBadRequest(b'Wrong number of arguments for MGET')
         return [self._store.get(key) for key in args]
 
 
@@ -88,32 +92,22 @@ store = RadishStore()
 
 
 async def handler(reader: asyncio.StreamReader, writer: asyncio.StreamWriter):
+    addr = writer.get_extra_info('peername')
     while 1:
         try:
-            request = await process_request(reader)
-        except RadishConnectionError:
-            writer.close()
-            print('closed')
-            break
+            request = await process_reader(reader)
+            logging.debug('Got request from %s: %s', addr, request)
+            if not isinstance(request, list):
+                raise RadishBadRequest(b'Bad request format')
+            answer = store.process_command(*request)
         except RadishBadRequest as e:
             answer = Error(e.msg)
-        else:
-            print(request)
-            if not isinstance(request, list):
-                answer = Error(b'Bad request format')
-                await process_response(writer, answer)
-                writer.close()
-                break
-            try:
-                answer = store.process_command(*request)
-            except RadishBadRequest as e:
-                answer = Error(e.msg)
-            except RadishConnectionError:
-                writer.close()
-                print('closed')
-                break
-        print(answer)
-        await process_response(writer, answer)
+        except RadishConnectionError:
+            writer.close()
+            logging.debug('Connection from %s closed', addr)
+            break
+        logging.debug(answer)
+        await process_writer(writer, answer)
 
 
 def run(host='127.0.0.1', port=7272, loop=None):
@@ -123,7 +117,8 @@ def run(host='127.0.0.1', port=7272, loop=None):
 
     server = loop.run_until_complete(coro)
 
-    print('Serving on {}'.format(server.sockets[0].getsockname()))
+    print(f'Serving RadishDB on {server.sockets[0].getsockname()}')
+    logging.debug(f'Serving RadishDB on {server.sockets[0].getsockname()}')
     try:
         loop.run_forever()
     except KeyboardInterrupt:
@@ -132,7 +127,3 @@ def run(host='127.0.0.1', port=7272, loop=None):
     server.close()
     loop.run_until_complete(server.wait_closed())
     loop.close()
-
-
-if __name__ == '__main__':
-    run()

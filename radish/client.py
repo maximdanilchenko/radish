@@ -1,9 +1,10 @@
-from typing import List
+import logging
 import asyncio
 from collections import namedtuple
 
-from protocol import process_request, process_response, RadishConnectionError, RadishError
+from radish.protocol import process_reader, process_writer, RadishConnectionError, RadishError
 
+__all__ = ['Pool', 'Client', 'RadishClientError']
 
 Stream = namedtuple('Stream', ['reader', 'writer'])
 
@@ -42,13 +43,14 @@ class Pool:
 
     async def _acquire(self):
         self._check_inited()
-        print('popped')
-        return await self._queue.get()
+        cl = await self._queue.get()
+        logging.debug('popped')
+        return cl
 
     def release(self, entity):
         self._check_inited()
-        print('released')
         self._queue.put_nowait(entity)
+        logging.debug('released')
 
     async def close(self):
         self._check_inited()
@@ -113,69 +115,14 @@ class Client:
 
     async def execute(self, *args):
         try:
-            await process_response(self._stream.writer, args)
+            await process_writer(self._stream.writer, args)
             if args[0] != b'QUIT':
-                resp = await process_request(self._stream.reader)
+                resp = await process_reader(self._stream.reader)
             else:
                 resp = None
         except RadishConnectionError as e:
-            print('error: %s' % e.msg)
+            logging.error('Connection Error: %s', e.msg)
             self._pool.close()
             raise RadishClientError(e.msg)
         else:
             return resp
-
-
-"""
-Examples of usage:
-"""
-
-
-async def run_client(pool: Pool, commands: List[List[bytes]]):
-    async with pool.acquire() as connection:
-        for command in commands:
-            response = await connection.execute(*command)
-            print(response)
-
-
-async def run_pool(*commands: List[List[bytes]]):
-    async with Pool('127.0.0.1', 7272, 2) as pool:
-        coros = [run_client(pool, command) for command in commands]
-        await asyncio.gather(*coros)
-
-
-def run(commands_lists):
-    loop = asyncio.get_event_loop()
-    loop.run_until_complete(run_pool(*commands_lists))
-    loop.close()
-
-
-if __name__ == '__main__':
-    """ How multiple clients can work in one connection loop: """
-    run([
-        [
-            [b'SET', b'key', b'val'],
-            [b'GET', b'key'],
-            [b'PING'],
-            [b'EXISTS', b'key', b'key', b'nokey'],
-            [b'EXISTS', b'key'],
-            [b'MSET', b'key1', b'val1', b'key2', b'val2'],
-            [b'EXISTS', b'key2'],
-            [b'ECHO', b'Hello!'],
-            [b'PING', b'Hello?'],
-            [b'PING'],
-            [b'FLUSHDB'],
-        ],
-        [
-            [b'SET', b'otherkey', b'val'],
-            [b'GET', b'otherkey'],
-            [b'DEL', b'otherkey'],
-        ],
-        [
-            [b'PING'],
-            [b'GET', b'something'],
-            [b'DEL', b'some'],
-            [b'FLUSHDB'],
-        ],
-
-    ])

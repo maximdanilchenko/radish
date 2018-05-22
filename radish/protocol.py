@@ -1,5 +1,5 @@
 """
-Implementing Redis Serialization Protocol (RESP)
+Implementing Redis Serialization Protocol (RESP). Can be used for both server and client sides.
     The way RESP is used in Redis as a request-response protocol is the following:
         - Clients send commands to a Redis server as a RESP Array of Bulk Strings.
         - The server replies with one of the RESP types according to the command implementation.
@@ -28,15 +28,14 @@ Examples:
 from typing import Union
 import asyncio
 from collections import namedtuple
-import async_timeout
 
 __all__ = ['Error',
            'RadishBadRequest',
            'RadishConnectionError',
            'RadishError',
            'RadishProtocolError',
-           'process_request',
-           'process_response']
+           'process_reader',
+           'process_writer']
 
 
 Error = namedtuple('Error', ['message'])
@@ -45,7 +44,7 @@ CLIENT_CONNECTION_TIMEOUT = 300
 
 
 class RadishError(Exception):
-    def __init__(self, msg: Union[str, bytes] = b'Radish Protocol Error'):
+    def __init__(self, msg: Union[str, bytes] = b'Radish Error'):
         if isinstance(msg, str):
             self.msg = msg.encode()
         else:
@@ -64,14 +63,13 @@ class RadishConnectionError(RadishError):
     """ Connection Error """
 
 
-async def process_request(reader: asyncio.StreamReader):
+async def process_reader(reader: asyncio.StreamReader):
     try:
-        async with async_timeout.timeout(CLIENT_CONNECTION_TIMEOUT):
-            command = await reader.read(1)
+        command = await asyncio.wait_for(reader.read(1), CLIENT_CONNECTION_TIMEOUT)
     except asyncio.TimeoutError:
-        raise RadishConnectionError('Timeout error')
+        raise RadishConnectionError(b'Timeout error')
     if not command:
-        raise RadishConnectionError('Empty request')
+        raise RadishConnectionError(b'Empty request')
     try:
         return await {
             b'+': _process_simple_string,
@@ -81,7 +79,7 @@ async def process_request(reader: asyncio.StreamReader):
             b'*': _process_array
         }[command](reader)
     except KeyError:
-        raise RadishBadRequest('Bad first byte')
+        raise RadishBadRequest(b'Bad first byte')
 
 
 async def _process_simple_string(reader: asyncio.StreamReader):
@@ -108,16 +106,16 @@ async def _process_array(reader: asyncio.StreamReader):
     if num_elements == -1:
         return [None]
     if num_elements < 0:
-        raise RadishBadRequest('Bad array length')
-    return [(await process_request(reader)) for _ in range(num_elements)]
+        raise RadishBadRequest(b'Bad array length')
+    return [(await process_reader(reader)) for _ in range(num_elements)]
 
 
-async def process_response(writer: asyncio.StreamWriter,
-                           data: Union[bytes,
-                                       int,
-                                       Error,
-                                       list,
-                                       tuple]):
+async def process_writer(writer: asyncio.StreamWriter,
+                         data: Union[bytes,
+                                     int,
+                                     Error,
+                                     list,
+                                     tuple]):
     _write_response(writer, data)
     await writer.drain()
 
@@ -141,4 +139,4 @@ def _write_response(writer: asyncio.StreamWriter,
     elif data is None:
         writer.write(b'$-1\r\n')
     else:
-        raise RadishProtocolError('Unrecognized type: %s' % type(data))
+        raise RadishProtocolError(b'Unrecognized type: %s' % type(data))
