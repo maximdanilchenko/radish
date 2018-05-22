@@ -24,6 +24,7 @@ class RadishStore:
             b'QUIT': self.quit,
             b'MGET': self.mget,
             b'MSET': self.mset,
+            b'STRLEN': self.strlen,
         }
 
     def process_command(self, command, *args):
@@ -40,7 +41,12 @@ class RadishStore:
     def set(self, *args):
         if len(args) != 2:
             raise RadishBadRequest(b'Wrong number of arguments for SET')
-        self._store[args[0]] = args[1]
+        val = args[1]
+        if isinstance(val, str):
+            val = val.encode()
+        elif isinstance(val, int):
+            val = b'%d' % val
+        self._store[args[0]] = val
         return 1
 
     def delete(self, *args):
@@ -80,12 +86,23 @@ class RadishStore:
             raise RadishBadRequest(b'Wrong number of arguments for MSET')
         lst_it = iter(args)
         for key, val in zip(lst_it, lst_it):
-            self._store[key] = val
+            self.set(key,val)
+        return b'OK'
 
     def mget(self, *args):
         if not args:
             raise RadishBadRequest(b'Wrong number of arguments for MGET')
         return [self._store.get(key) for key in args]
+
+    def strlen(self, *args):
+        if len(args) != 1:
+            raise RadishBadRequest(b'Wrong number of arguments for STRLEN')
+        try:
+            return len(self._store[args[0]])
+        except KeyError:
+            return 0
+        except TypeError:
+            raise RadishBadRequest(b'Wrong type of value')
 
 
 store = RadishStore()

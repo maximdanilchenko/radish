@@ -14,7 +14,7 @@ async def run_client(pool: client.Pool, commands: List[List[bytes]]):
         for command in commands:
             response = await connection.execute(*command)
             logging.debug(response)
-            await asyncio.sleep(random.randint(0, 3))
+            await asyncio.sleep(600)
 
 
 async def run_pool(*commands: List[List[bytes]]):
