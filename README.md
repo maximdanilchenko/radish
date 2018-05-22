@@ -1,4 +1,4 @@
-### Simple REDIS DB and its client with connection pool written in python3/asyncio | Just for fun
+### Simple Redis-like DB and its client with connection pool written in python3/asyncio
 _Inspired by [this article](http://charlesleifer.com/blog/building-a-simple-redis-server-with-python/)_
 
 #### Contents:
@@ -36,7 +36,7 @@ and one of the causes I started this repo
 
 #### Pypi package/usage in real tasks
 While Radish DB is in development it is not recommended to use it in some real tasks. 
-There some things I should do before - benchmarks, tests and some fixes and issues are in backlog to implement.
+There are some things I should do before - benchmarks, tests and some fixes and issues are in backlog to implement.
 
 After all it **is not a database for production apps** - it is redis clone, written in Python. 
 But I thing it will be good for prototyping or for small apps 
