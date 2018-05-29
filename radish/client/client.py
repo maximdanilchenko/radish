@@ -2,38 +2,34 @@ import logging
 import asyncio
 from collections import namedtuple
 
-from radish.protocol import process_reader, process_writer, RadishConnectionError, RadishError
+from radish.protocol import process_reader, process_writer, RadishConnectionError
+from radish.exceptions import RadishClientError
+from .flayer import FLayer
 
-__all__ = ['Pool', 'Client', 'RadishClientError']
 
 Stream = namedtuple('Stream', ['reader', 'writer'])
 
 
-class RadishClientError(RadishError):
-    """ Client Error """
-
-
-class Pool:
-    def __init__(self, host='127.0.0.1', port=7272, size=10, echo_time=30, loop=None):
+class ConnectionPool:
+    def __init__(self, host='127.0.0.1', port=7272, size=10, loop=None):
         if loop is None:
             loop = asyncio.get_event_loop()
         self._loop = loop
         self._queue = asyncio.LifoQueue(maxsize=size, loop=self._loop)
         self._clients = []
         for _ in range(size):
-            cl = Client(host=host, port=port, pool=self)
+            cl = Connection(host=host, port=port, pool=self)
             self._queue.put_nowait(cl)
             self._clients.append(cl)
 
         self._inited = False
         self._closed = False
-        self._echo_time = echo_time
 
     async def _init(self):
         if self._inited:
             return None
         if self._closed:
-            raise RadishClientError('Pool is closed')
+            raise RadishClientError(b'Pool is closed')
         connect_tasks = [cl.connect() for cl in self._clients]
         await asyncio.gather(*connect_tasks, loop=self._loop)
         self._inited = True
@@ -60,9 +56,9 @@ class Pool:
 
     def _check_inited(self):
         if not self._inited:
-            raise RadishClientError('Pool is not inited')
+            raise RadishClientError(b'Pool is not inited')
         if self._closed:
-            raise RadishClientError('Pool is closed')
+            raise RadishClientError(b'Pool is closed')
 
     async def __aenter__(self):
         await self._init()
@@ -91,8 +87,8 @@ class PoolObjContext:
         return self.pool._acquire().__await__()
 
 
-class Client:
-    def __init__(self, host, port, pool):
+class Connection(FLayer):
+    def __init__(self, host, port, pool=None):
         self._host = host
         self._port = port
         self._stream = None
@@ -113,7 +109,7 @@ class Client:
         self._stream = None
         self._in_use = False
 
-    async def execute(self, *args):
+    async def _execute(self, *args):
         try:
             await process_writer(self._stream.writer, args)
             if args[0] != b'QUIT':
@@ -122,7 +118,8 @@ class Client:
                 resp = None
         except RadishConnectionError as e:
             logging.error('Connection Error: %s', e.msg)
-            self._pool.close()
+            if self._pool:
+                await self._pool.close()
             raise RadishClientError(e.msg)
         else:
             return resp

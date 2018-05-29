@@ -1,24 +1,27 @@
 """
 Examples of Radish Client usage with Connection Pooling:
 """
-import random
 import asyncio
 import logging
+import random
 from typing import List
 
-from radish import client
+from radish.client import ConnectionPool
+
+POOL_SETTINGS = dict(host='127.0.0.1', port=7272, size=5)
+RANDOM_SLEEP = (0, 5)
 
 
-async def run_client(pool: client.Pool, commands: List[List[bytes]]):
+async def run_client(pool: ConnectionPool, commands: List[List[bytes]]):
     async with pool.acquire() as connection:
         for command in commands:
             response = await connection.execute(*command)
-            logging.debug(response)
-            await asyncio.sleep(600)
+            logging.debug(f'{b" ".join(command)} -> {response}')
+            await asyncio.sleep(random.randint(*RANDOM_SLEEP))
 
 
 async def run_pool(*commands: List[List[bytes]]):
-    async with client.Pool('127.0.0.1', 7272, 5) as pool:
+    async with ConnectionPool(**POOL_SETTINGS) as pool:
         coros = [run_client(pool, command) for command in commands]
         await asyncio.gather(*coros)
 
