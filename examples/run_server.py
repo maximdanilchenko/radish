@@ -3,7 +3,9 @@ Examples of Radish DB usage:
 """
 import logging
 import asyncio
-from radish import server
+from radish.database import server
+
+SERVER_SETTINGS = dict(host='127.0.0.1', port=7272)
 
 # Try to use UVloop:
 try:
@@ -17,4 +19,4 @@ if __name__ == '__main__':
     logger = logging.getLogger()
     logger.setLevel(logging.DEBUG)
     logger.addHandler(logging.StreamHandler())
-    server.run(host='127.0.0.1', port=7272)
+    server.run(**SERVER_SETTINGS)

@@ -1,11 +1,15 @@
+from itertools import chain
+
+from radish.exceptions import RadishClientError
 
 
 class FLayer:
 
-    def _execute(self, *args):
+    async def _execute(self, *args):
         raise NotImplementedError
 
-    def to_bytes(self, arg):
+    @staticmethod
+    def _to_bytes(arg):
         if isinstance(arg, bytes):
             return arg
         elif isinstance(arg, str):
@@ -13,41 +17,44 @@ class FLayer:
         elif isinstance(arg, int):
             return b'%d' % arg
         else:
-            raise Exception
+            raise RadishClientError(b'Incorrect execute argument type')
 
-    def execute(self, cmd, *args):
-        return self._execute(cmd, *map(self.to_bytes, args))
+    async def execute(self, *args):
+        return await self._execute(*map(self._to_bytes, args))
 
-    def get(self, key):
-        self.execute(b'GET', key)
+    async def get(self, key):
+        return await self.execute(b'GET', key)
 
-    def set(self, key, value):
-        self.execute(b'SET', key, value)
+    async def set(self, key, value):
+        return await self.execute(b'SET', key, value)
 
-    def delete(self, key):
-        self.execute(b'DELETE')
+    async def delete(self, key):
+        return await self.execute(b'DELETE', key)
 
-    def flush(self, key):
-        self.execute(b'FLUSH')
+    async def flush(self):
+        return await self.execute(b'FLUSH')
 
-    def exists(self, key):
-        self.execute(b'EXISTS')
+    async def exists(self, key):
+        return await self.execute(b'EXISTS', key)
 
-    def echo(self, key):
-        self.execute(b'ECHO')
+    async def echo(self, echo):
+        return await self.execute(b'ECHO', echo)
 
-    def ping(self, key):
-        self.execute(b'PING')
+    async def ping(self):
+        return await self.execute(b'PING')
 
-    def quit(self, key):
-        self.execute(b'QUIT')
+    async def quit(self):
+        return await self.execute(b'QUIT')
 
-    def mset(self, key):
-        self.execute(b'MSET')
+    async def mset(self, *args, **kwargs):
+        if len(args) % 2:
+            raise RadishClientError(
+                b'Incorrect args number. Should be even (key: value)')
+        return await self.execute(b'MSET', *args, *chain(*kwargs.items()))
 
-    def mget(self, key):
-        self.execute(b'MGET')
+    async def mget(self, *keys):
+        return await self.execute(b'MGET', *keys)
 
-    def strlen(self, key):
-        self.execute(b'STRLEN')
+    async def strlen(self, key):
+        return await self.execute(b'STRLEN', key)
 

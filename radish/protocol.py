@@ -29,10 +29,12 @@ from typing import Union
 import asyncio
 from collections import namedtuple
 
-__all__ = ['Error',
-           'RadishBadRequest',
+from radish.exceptions import (RadishBadRequest,
+                               RadishConnectionError,
+                               RadishProtocolError)
+
+__all__ = ['RadishBadRequest',
            'RadishConnectionError',
-           'RadishError',
            'RadishProtocolError',
            'process_reader',
            'process_writer']
@@ -43,29 +45,10 @@ Error = namedtuple('Error', ['message'])
 CLIENT_CONNECTION_TIMEOUT = 300
 
 
-class RadishError(Exception):
-    def __init__(self, msg: Union[str, bytes] = b'Radish Error'):
-        if isinstance(msg, str):
-            self.msg = msg.encode()
-        else:
-            self.msg = msg
-
-
-class RadishBadRequest(RadishError):
-    """ Bad request error """
-
-
-class RadishProtocolError(RadishError):
-    """ Protocol error """
-
-
-class RadishConnectionError(RadishError):
-    """ Connection Error """
-
-
 async def process_reader(reader: asyncio.StreamReader):
     try:
-        command = await asyncio.wait_for(reader.read(1), CLIENT_CONNECTION_TIMEOUT)
+        command = await asyncio.wait_for(reader.read(1),
+                                         CLIENT_CONNECTION_TIMEOUT)
     except asyncio.TimeoutError:
         raise RadishConnectionError(b'Timeout error')
     if not command:
