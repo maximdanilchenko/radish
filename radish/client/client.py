@@ -3,6 +3,7 @@ import asyncio
 from collections import namedtuple
 
 from radish.protocol import process_reader, process_writer, RadishConnectionError, RadishError
+from .flayer import FLayer
 
 __all__ = ['Pool', 'Client', 'RadishClientError']
 
@@ -91,8 +92,8 @@ class PoolObjContext:
         return self.pool._acquire().__await__()
 
 
-class Client:
-    def __init__(self, host, port, pool):
+class Client(FLayer):
+    def __init__(self, host, port, pool=None):
         self._host = host
         self._port = port
         self._stream = None
@@ -113,7 +114,7 @@ class Client:
         self._stream = None
         self._in_use = False
 
-    async def execute(self, *args):
+    async def _execute(self, *args):
         try:
             await process_writer(self._stream.writer, args)
             if args[0] != b'QUIT':
@@ -122,7 +123,8 @@ class Client:
                 resp = None
         except RadishConnectionError as e:
             logging.error('Connection Error: %s', e.msg)
-            self._pool.close()
+            if self._pool:
+                await self._pool.close()
             raise RadishClientError(e.msg)
         else:
             return resp
