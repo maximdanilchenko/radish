@@ -6,8 +6,8 @@ _Inspired by [this article](http://charlesleifer.com/blog/building-a-simple-redi
 | File | Description |
 | :--- | :---------- |
 | [protocol.py](radish/protocol.py) | Simplified RESP (REdis Serialization Protocol) realization |
-| [server.py](radish/server.py) | Server based on toy memory storage with some most common REDIS operations |
-| [client.py](radish/client/client.py) | Connection pool implementation |
+| [database](radish/database) | Toy memory Storage with some most common REDIS operations and simple socket Server |
+| [client.py](radish/client/client.py) | Client Connection and ConnectionPool implementation |
 
 
 #### Examples of usage:
