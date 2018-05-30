@@ -95,7 +95,8 @@ async def process_writer(writer: asyncio.StreamWriter,
                                      int,
                                      Error,
                                      list,
-                                     tuple]):
+                                     tuple,
+                                     None]):
     _write_response(writer, data)
     await writer.drain()
 
@@ -105,7 +106,8 @@ def _write_response(writer: asyncio.StreamWriter,
                                 int,
                                 Error,
                                 list,
-                                tuple]):
+                                tuple,
+                                None]):
     if isinstance(data, bytes):
         writer.write(b'$%d\r\n%s\r\n' % (len(data), data))
     elif isinstance(data, int):
