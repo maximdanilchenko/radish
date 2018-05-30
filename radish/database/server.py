@@ -29,7 +29,7 @@ class Server:
                 writer.close()
                 logging.debug(f'Connection from {address} closed')
                 break
-            logging.debug(f'Answer: {answer}')
+            logging.debug(f'Sent response to {address}: {answer}')
             await process_writer(writer, answer)
 
     def run(self, loop=None):
