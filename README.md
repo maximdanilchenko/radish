@@ -1,21 +1,22 @@
 ### Simple Redis-like DB and its client with connection pool written in python3/asyncio
 _Inspired by [this article](http://charlesleifer.com/blog/building-a-simple-redis-server-with-python/)_
 
-#### Contents:
+#### [Contents](radish):
 
-| File | Description |
+| Files | Description |
 | :--- | :---------- |
 | [protocol.py](radish/protocol.py) | Simplified RESP (REdis Serialization Protocol) realization |
-| [database](radish/database) | Toy memory Storage with some most common REDIS operations and simple socket Server |
-| [client.py](radish/client/client.py) | Client Connection and ConnectionPool implementation |
+| [database](radish/database) | Toy memory Storage with some most common REDIS operations and simple socket Server with asyncio |
+| [client](radish/client) | Client Connection and ConnectionPool implementation |
 
 
-#### Examples of usage:
+#### [Examples](examples) of usage:
 
 | File | Description |
 | :--- | :---------- |
 | [run_server.py](examples/run_server.py) | Example of running DB server |
-| [run_client.py](examples/run_client_pool_raw.py) | Example of running multiple clients in parallel using connection pool |
+| [run_client.py](examples/run_client.py) | Example of running client with one Connection |
+| [run_client_pool.py](examples/run_client_pool.py) | Example of running multiple clients with ConnectionPool |
 
 
 #### Why?
@@ -41,4 +42,4 @@ There are some things I should do before - benchmarks, tests and some fixes and 
 After all it **is not a database for production apps** - it is redis clone, written in Python. 
 But I thing it will be good for prototyping or for small apps 
 because of its simple installation and starting - it is lightweight and has no dependencies. 
-But overall it will be possible after benchmarks and tests will be done.
+But overall it will be possible only after benchmarks and tests will be done.
