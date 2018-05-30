@@ -78,7 +78,7 @@ class RadishStore:
             raise RadishBadRequest(b'Wrong number of arguments for MSET')
         lst_it = iter(args)
         for key, val in zip(lst_it, lst_it):
-            self.set(key,val)
+            self.set(key, val)
         return b'OK'
 
     def mget(self, *args):

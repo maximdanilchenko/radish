@@ -15,7 +15,7 @@ _Inspired by [this article](http://charlesleifer.com/blog/building-a-simple-redi
 | File | Description |
 | :--- | :---------- |
 | [run_server.py](examples/run_server.py) | Example of running DB server |
-| [run_client.py](examples/run_client.py) | Example of running multiple clients in parallel using connection pool |
+| [run_client.py](examples/run_client_pool_raw.py) | Example of running multiple clients in parallel using connection pool |
 
 
 #### Why?

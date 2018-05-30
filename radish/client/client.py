@@ -2,8 +2,9 @@ import logging
 import asyncio
 from collections import namedtuple
 
-from radish.protocol import process_reader, process_writer, RadishConnectionError
-from radish.exceptions import RadishClientError
+from radish.protocol import process_reader, process_writer
+from radish.exceptions import RadishClientError, RadishConnectionError
+
 from .flayer import FLayer
 
 

@@ -6,45 +6,48 @@ from radish.exceptions import RadishBadRequest, RadishConnectionError
 
 from .storage import RadishStore
 
-__all__ = ['run']
 
+class Server:
 
-store = RadishStore()
+    def __init__(self, host: str='127.0.0.1', port: int=7272, storage: RadishStore=None):
+        self.host = host
+        self.port = port
+        self.storage = storage or RadishStore()
 
+    async def handler(self, reader: asyncio.StreamReader, writer: asyncio.StreamWriter):
+        address = writer.get_extra_info('peername')
+        while 1:
+            try:
+                request = await process_reader(reader)
+                logging.debug(f'Got request from {address}: {request}')
+                if not isinstance(request, list):
+                    raise RadishBadRequest(b'Bad request format')
+                answer = self.storage.process_command(*request)
+            except RadishBadRequest as e:
+                answer = Error(e.msg)
+            except RadishConnectionError:
+                writer.close()
+                logging.debug(f'Connection from {address} closed')
+                break
+            logging.debug(f'Sent response to {address}: {answer}')
+            await process_writer(writer, answer)
 
-async def handler(reader: asyncio.StreamReader, writer: asyncio.StreamWriter):
-    addr = writer.get_extra_info('peername')
-    while 1:
+    def run(self, loop=None):
+        if loop is None:
+            loop = asyncio.get_event_loop()
+
+        coro = asyncio.start_server(self.handler, self.host, self.port, loop=loop)
+
+        server = loop.run_until_complete(coro)
+
+        print(f'Serving RadishDB on {server.sockets[0].getsockname()}')
+        logging.debug(f'Serving RadishDB on {server.sockets[0].getsockname()}')
+
         try:
-            request = await process_reader(reader)
-            logging.debug('Got request from %s: %s', addr, request)
-            if not isinstance(request, list):
-                raise RadishBadRequest(b'Bad request format')
-            answer = store.process_command(*request)
-        except RadishBadRequest as e:
-            answer = Error(e.msg)
-        except RadishConnectionError:
-            writer.close()
-            logging.debug('Connection from %s closed', addr)
-            break
-        logging.debug(answer)
-        await process_writer(writer, answer)
+            loop.run_forever()
+        except KeyboardInterrupt:
+            pass
 
-
-def run(host='127.0.0.1', port=7272, loop=None):
-    if loop is None:
-        loop = asyncio.get_event_loop()
-    coro = asyncio.start_server(handler, host, port, loop=loop)
-
-    server = loop.run_until_complete(coro)
-
-    print(f'Serving RadishDB on {server.sockets[0].getsockname()}')
-    logging.debug(f'Serving RadishDB on {server.sockets[0].getsockname()}')
-    try:
-        loop.run_forever()
-    except KeyboardInterrupt:
-        pass
-
-    server.close()
-    loop.run_until_complete(server.wait_closed())
-    loop.close()
+        server.close()
+        loop.run_until_complete(server.wait_closed())
+        loop.close()
