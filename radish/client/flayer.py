@@ -29,10 +29,12 @@ class FLayer:
         return await self.execute(b'SET', key, value)
 
     async def delete(self, key):
-        return await self.execute(b'DELETE', key)
+        return await self.execute(b'DEL', key)
 
-    async def flush(self):
-        return await self.execute(b'FLUSH')
+    async def flushdb(self):
+        return await self.execute(b'FLUSHDB')
+
+    flush = flushdb
 
     async def exists(self, key):
         return await self.execute(b'EXISTS', key)

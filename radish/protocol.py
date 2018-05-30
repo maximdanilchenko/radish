@@ -33,10 +33,7 @@ from radish.exceptions import (RadishBadRequest,
                                RadishConnectionError,
                                RadishProtocolError)
 
-__all__ = ['RadishBadRequest',
-           'RadishConnectionError',
-           'RadishProtocolError',
-           'process_reader',
+__all__ = ['process_reader',
            'process_writer']
 
 
