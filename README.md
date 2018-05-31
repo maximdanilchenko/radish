@@ -3,7 +3,7 @@ _Inspired by [this article](http://charlesleifer.com/blog/building-a-simple-redi
 
 ![radish](https://user-images.githubusercontent.com/10708076/40731573-0343449c-643a-11e8-95f5-46a9fe9b901b.jpg)
 
-### [Contents](radish):
+### ↈ [Contents](radish):
 
 | Files | Description |
 | :--- | :---------- |
@@ -12,7 +12,7 @@ _Inspired by [this article](http://charlesleifer.com/blog/building-a-simple-redi
 | [client](radish/client) | Client Connection and ConnectionPool implementation |
 
 
-### [Examples](examples) of usage:
+### ↈ [Examples](examples) of usage:
 
 ##### RadishDB Server:
 ```python
@@ -75,7 +75,7 @@ loop.run_until_complete(run_pool())
 loop.close()
 ```
 
-### Why?
+### ↈ Why?
 After I read [this article](http://charlesleifer.com/blog/building-a-simple-redis-server-with-python/) 
 I was inspired to do something like it, but with asyncio, with more commands and 
 with whole client stuff (such as connection pool). 
@@ -91,7 +91,7 @@ and for benchmarking this whole solution
 - Connection Pool for client. It was most interesting part for me 
 and one of the causes I started this repo
 
-### Pypi package/usage in real tasks
+### ↈ Pypi package/usage in real tasks
 While Radish DB is in development it is not recommended to use it in some real tasks. 
 There are some things I should do before - benchmarks, tests and some fixes and issues are in backlog to implement.
 
