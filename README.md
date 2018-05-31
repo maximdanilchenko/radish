@@ -1,9 +1,9 @@
-### Simple Redis-like DB and its client written in python3/asyncio
+## Radish - simple Redis-like DB and its client written in python3/asyncio
 _Inspired by [this article](http://charlesleifer.com/blog/building-a-simple-redis-server-with-python/)_
 
 ![radish](https://user-images.githubusercontent.com/10708076/40731573-0343449c-643a-11e8-95f5-46a9fe9b901b.jpg)
 
-#### [Contents](radish):
+### [Contents](radish):
 
 | Files | Description |
 | :--- | :---------- |
@@ -12,16 +12,68 @@ _Inspired by [this article](http://charlesleifer.com/blog/building-a-simple-redi
 | [client](radish/client) | Client Connection and ConnectionPool implementation |
 
 
-#### [Examples](examples) of usage:
+### [Examples](examples) of usage:
 
-| File | Description |
-| :--- | :---------- |
-| [run_server.py](examples/run_server.py) | Example of running DB server |
-| [run_client.py](examples/run_client.py) | Example of running client with one Connection |
-| [run_client_pool.py](examples/run_client_pool.py) | Example of running multiple clients with ConnectionPool |
+##### RadishDB Server:
+```python
+from radish.database import Server
+
+server = Server(host='127.0.0.1', port=7272)
+server.run()
+```
+
+##### Client with one connection:
+```python
+import asyncio
+from radish.client import Connection
 
 
-#### Why?
+async def run_client():
+    con = Connection(host='127.0.0.1', port=7272)  # host and port where radish db server is running
+    await con.connect()
+    assert await con.set('my_key', 'my_val') == 1
+    assert await con.get('my_key') == b'my_val'
+    assert await con.echo('hello') == b'hello'
+    assert await con.delete('my_key') == 1
+    assert await con.mset(k1=1, k2=b'2', k3='3') == b'OK'
+    assert await con.mget('k1', 'k3', 'k2') == [b'1', b'3', b'2']
+    assert await con.ping() == b'PONG'
+    assert await con.exists('k2') == 1
+    assert await con.flush() == 3
+    await con.close()
+
+
+loop = asyncio.get_event_loop()
+loop.run_until_complete(run_client())
+loop.close()
+```
+
+##### Client with connection pooling:
+```python
+import asyncio
+import random
+
+from radish.client import ConnectionPool, Connection
+
+
+async def run_client(pool: ConnectionPool):
+    async with pool.acquire() as con:  # type: Connection
+        assert await con.ping() == b'PONG'
+        await asyncio.sleep(random.randint(0, 5))
+
+
+async def run_pool():
+    async with ConnectionPool(host='127.0.0.1', port=7272, size=5) as pool:
+        clients = [run_client(pool) for _ in range(10)]
+        await asyncio.gather(*clients)
+
+
+loop = asyncio.get_event_loop()
+loop.run_until_complete(run_pool())
+loop.close()
+```
+
+### Why?
 After I read [this article](http://charlesleifer.com/blog/building-a-simple-redis-server-with-python/) 
 I was inspired to do something like it, but with asyncio, with more commands and 
 with whole client stuff (such as connection pool). 
@@ -37,7 +89,7 @@ and for benchmarking this whole solution
 - Connection Pool for client. It was most interesting part for me 
 and one of the causes I started this repo
 
-#### Pypi package/usage in real tasks
+### Pypi package/usage in real tasks
 While Radish DB is in development it is not recommended to use it in some real tasks. 
 There are some things I should do before - benchmarks, tests and some fixes and issues are in backlog to implement.
 
