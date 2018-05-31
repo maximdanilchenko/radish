@@ -125,3 +125,10 @@ class Connection(FLayer):
         else:
             return resp
 
+    async def __aenter__(self):
+        await self.connect()
+        return self
+
+    async def __aexit__(self, *exc):
+        await self.close()
+

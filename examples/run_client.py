@@ -12,12 +12,14 @@ async def run_client():
     assert await con.get('my_key') == b'my_val'
     assert await con.echo('hello') == b'hello'
     assert await con.delete('my_key') == 1
-    assert await con.mset(k1=1, k2=b'2', k3='3') == b'OK'
-    assert await con.mget('k1', 'k3', 'k2') == [b'1', b'3', b'2']
-    assert await con.ping() == b'PONG'
-    assert await con.exists('k2') == 1
-    assert await con.flush() == 3
     await con.close()
+    # using "async with" statement:
+    async with Connection(host='127.0.0.1', port=7272) as con:
+        assert await con.mset(k1=1, k2=b'2', k3='3') == b'OK'
+        assert await con.mget('k1', 'k3', 'k2') == [b'1', b'3', b'2']
+        assert await con.ping() == b'PONG'
+        assert await con.exists('k2') == 1
+        assert await con.flush() == 3
 
 
 if __name__ == '__main__':
