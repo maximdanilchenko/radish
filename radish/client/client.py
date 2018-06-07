@@ -12,7 +12,38 @@ Stream = namedtuple('Stream', ['reader', 'writer'])
 
 
 class ConnectionPool:
-    def __init__(self, host='127.0.0.1', port=7272, min_size=10, max_size=10, loop=None):
+    def __init__(self,
+                 host='127.0.0.1',
+                 port=7272,
+                 min_size=10,
+                 max_size=10,
+                 loop=None):
+        """
+        Radish connection pool holder.
+
+        Usage:
+
+        .. code-block:: python
+
+            async with ConnectionPool(host='127.0.0.1', port=7272) as pool:
+                async with pool.acquire() as con:  # type: Connection
+                    assert await con.ping() == b'PONG'
+
+        :param host:
+            Radish DB server host to connect.
+
+        :param port:
+            Radish DB server port to connect.
+
+        :param min_size:
+            Number of connection the pool will be initialized with.
+
+        :param max_size:
+            Maximum number of connections in the pool.
+
+        :param loop:
+            Asyncio event loop.
+        """
         if loop is None:
             loop = asyncio.get_event_loop()
         self._loop = loop
@@ -91,6 +122,34 @@ class PoolObjContext:
 
 class Connection(FLayer):
     def __init__(self, host, port, pool=None):
+        """
+        Radish connection holder.
+
+        Usage:
+
+        .. code-block:: python
+
+            con = Connection(host='127.0.0.1', port=7272)
+            await con.connect()
+            assert await con.set('my_key', 'my_val') == 1
+            await con.close()
+
+        Using "async with" statement:
+
+        .. code-block:: python
+
+            async with Connection(host='127.0.0.1', port=7272) as con:
+                assert await con.mset(k1=1, k2=b'2', k3='3') == b'OK'
+
+        :param host:
+            Radish DB server host to connect.
+
+        :param port:
+            Radish DB server port to connect.
+
+        :param pool:
+            Pool to hold this connection.
+        """
         self._host = host
         self._port = port
         self._stream = None

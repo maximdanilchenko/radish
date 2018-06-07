@@ -9,7 +9,7 @@ from radish.client import ConnectionPool, Connection
 
 POOL_SETTINGS = dict(host='127.0.0.1', port=7272, min_size=3, max_size=20)
 RANDOM_SLEEP = (0, 5)
-CLIENTS_COUNT = 1
+CLIENTS_COUNT = 10
 
 
 async def run_client(pool: ConnectionPool):
