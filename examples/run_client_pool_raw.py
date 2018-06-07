@@ -8,7 +8,7 @@ from typing import List
 
 from radish.client import ConnectionPool
 
-POOL_SETTINGS = dict(host='127.0.0.1', port=7272, size=5)
+POOL_SETTINGS = dict(host='127.0.0.1', port=7272, min_size=5, max_size=10)
 RANDOM_SLEEP = (0, 5)
 
 

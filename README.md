@@ -65,7 +65,10 @@ async def run_client(pool: ConnectionPool):
 
 
 async def run_pool():
-    async with ConnectionPool(host='127.0.0.1', port=7272, size=5) as pool:
+    async with ConnectionPool(host='127.0.0.1', 
+                              port=7272, 
+                              min_size=5, 
+                              max_size=20) as pool:
         clients = [run_client(pool) for _ in range(10)]
         await asyncio.gather(*clients)
 
