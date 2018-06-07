@@ -12,28 +12,70 @@ Stream = namedtuple('Stream', ['reader', 'writer'])
 
 
 class ConnectionPool:
-    def __init__(self, host='127.0.0.1', port=7272, size=10, loop=None):
+    def __init__(self,
+                 host='127.0.0.1',
+                 port=7272,
+                 min_size=10,
+                 max_size=10,
+                 loop=None):
+        """
+        Radish connection pool holder.
+
+        Usage:
+
+        .. code-block:: python
+
+            pool = await ConnectionPool(**POOL_SETTINGS)
+            con = await pool.acquire()
+            assert await con.ping() == b'PONG'
+            await pool.close()
+
+        Using "async with" statement:
+
+        .. code-block:: python
+
+            async with ConnectionPool(host='127.0.0.1', port=7272) as pool:
+                async with pool.acquire() as con:  # type: Connection
+                    assert await con.ping() == b'PONG'
+
+        :param host:
+            Radish DB server host to connect.
+
+        :param port:
+            Radish DB server port to connect.
+
+        :param min_size:
+            Number of connection the pool will be initialized with.
+
+        :param max_size:
+            Maximum number of connections in the pool.
+
+        :param loop:
+            Asyncio event loop.
+        """
         if loop is None:
             loop = asyncio.get_event_loop()
         self._loop = loop
-        self._queue = asyncio.LifoQueue(maxsize=size, loop=self._loop)
+        self._queue = asyncio.LifoQueue(maxsize=max_size, loop=self._loop)
         self._clients = []
-        for _ in range(size):
+        for _ in range(max_size):
             cl = Connection(host=host, port=port, pool=self)
             self._queue.put_nowait(cl)
             self._clients.append(cl)
 
         self._inited = False
         self._closed = False
+        self._min_size = min_size
 
     async def _init(self):
         if self._inited:
             return None
         if self._closed:
             raise RadishClientError(b'Pool is closed')
-        connect_tasks = [cl.connect() for cl in self._clients]
+        connect_tasks = [cl.connect() for cl in self._clients[-self._min_size:]]
         await asyncio.gather(*connect_tasks, loop=self._loop)
         self._inited = True
+        return self
 
     def acquire(self):
         return PoolObjContext(self)
@@ -90,6 +132,34 @@ class PoolObjContext:
 
 class Connection(FLayer):
     def __init__(self, host, port, pool=None):
+        """
+        Radish connection holder.
+
+        Usage:
+
+        .. code-block:: python
+
+            con = Connection(host='127.0.0.1', port=7272)
+            await con.connect()
+            assert await con.set('my_key', 'my_val') == 1
+            await con.close()
+
+        Using "async with" statement:
+
+        .. code-block:: python
+
+            async with Connection(host='127.0.0.1', port=7272) as con:
+                assert await con.mset(k1=1, k2=b'2', k3='3') == b'OK'
+
+        :param host:
+            Radish DB server host to connect.
+
+        :param port:
+            Radish DB server port to connect.
+
+        :param pool:
+            Pool to hold this connection.
+        """
         self._host = host
         self._port = port
         self._stream = None
@@ -97,20 +167,26 @@ class Connection(FLayer):
         self._in_use = False
 
     async def connect(self, loop=None):
-        if loop is None:
-            loop = asyncio.get_event_loop()
+        loop = (loop
+                or self._pool._loop if self._pool
+                else asyncio.get_event_loop())
+
         self._stream = Stream(*await asyncio.open_connection(self._host,
                                                              self._port,
                                                              loop=loop))
         self._in_use = True
+        logging.debug('connected')
 
     async def close(self):
-        await self.execute(b'QUIT')
-        self._stream.writer.close()
-        self._stream = None
-        self._in_use = False
+        if self._in_use:
+            await self.execute(b'QUIT')
+            self._stream.writer.close()
+            self._stream = None
+            self._in_use = False
 
     async def _execute(self, *args):
+        if not self._in_use:
+            await self.connect()
         try:
             await process_writer(self._stream.writer, args)
             if args[0] != b'QUIT':

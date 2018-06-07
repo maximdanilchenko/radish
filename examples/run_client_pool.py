@@ -7,7 +7,7 @@ import random
 
 from radish.client import ConnectionPool, Connection
 
-POOL_SETTINGS = dict(host='127.0.0.1', port=7272, size=5)
+POOL_SETTINGS = dict(host='127.0.0.1', port=7272, min_size=3, max_size=20)
 RANDOM_SLEEP = (0, 5)
 CLIENTS_COUNT = 10
 

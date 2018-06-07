@@ -8,7 +8,7 @@ from typing import List
 
 from radish.client import ConnectionPool
 
-POOL_SETTINGS = dict(host='127.0.0.1', port=7272, size=5)
+POOL_SETTINGS = dict(host='127.0.0.1', port=7272, min_size=5, max_size=10)
 RANDOM_SLEEP = (0, 5)
 
 
@@ -21,9 +21,10 @@ async def run_client(pool: ConnectionPool, commands: List[List[bytes]]):
 
 
 async def run_pool(*commands: List[List[bytes]]):
-    async with ConnectionPool(**POOL_SETTINGS) as pool:
-        coros = [run_client(pool, command) for command in commands]
-        await asyncio.gather(*coros)
+    pool = await ConnectionPool(**POOL_SETTINGS)
+    coros = [run_client(pool, command) for command in commands]
+    await asyncio.gather(*coros)
+    await pool.close()
 
 
 def run(commands_lists):
