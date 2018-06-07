@@ -25,6 +25,15 @@ class ConnectionPool:
 
         .. code-block:: python
 
+            pool = await ConnectionPool(**POOL_SETTINGS)
+            con = await pool.acquire()
+            assert await con.ping() == b'PONG'
+            await pool.close()
+
+        Using "async with" statement:
+
+        .. code-block:: python
+
             async with ConnectionPool(host='127.0.0.1', port=7272) as pool:
                 async with pool.acquire() as con:  # type: Connection
                     assert await con.ping() == b'PONG'
@@ -66,6 +75,7 @@ class ConnectionPool:
         connect_tasks = [cl.connect() for cl in self._clients[-self._min_size:]]
         await asyncio.gather(*connect_tasks, loop=self._loop)
         self._inited = True
+        return self
 
     def acquire(self):
         return PoolObjContext(self)
