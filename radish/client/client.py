@@ -164,7 +164,7 @@ class Connection(FLayer):
         self._port = port
         self._stream = None
         self._pool = pool
-        self._in_use = False
+        self._connected = False
 
     async def connect(self, loop=None):
         loop = (loop
@@ -174,18 +174,18 @@ class Connection(FLayer):
         self._stream = Stream(*await asyncio.open_connection(self._host,
                                                              self._port,
                                                              loop=loop))
-        self._in_use = True
+        self._connected = True
         logging.debug('connected')
 
     async def close(self):
-        if self._in_use:
+        if self._connected:
             await self.execute(b'QUIT')
             self._stream.writer.close()
             self._stream = None
-            self._in_use = False
+            self._connected = False
 
     async def _execute(self, *args):
-        if not self._in_use:
+        if not self._connected:
             await self.connect()
         try:
             await process_writer(self._stream.writer, args)

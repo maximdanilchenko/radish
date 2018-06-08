@@ -7,7 +7,6 @@ from radish.client import Connection
 
 async def run_client():
     con = Connection(host='127.0.0.1', port=7272)
-    await con.connect()
     assert await con.set('my_key', 'my_val') == 1
     assert await con.get('my_key') == b'my_val'
     assert await con.echo('hello') == b'hello'
