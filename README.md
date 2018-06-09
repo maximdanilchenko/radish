@@ -101,3 +101,11 @@ After all it **is not a database for production apps** - it is redis clone, writ
 But I thing it will be good for prototyping or for small apps 
 because of its simple installation and starting - it is lightweight and has no dependencies. 
 But overall it will be possible only after benchmarks and tests will be done.
+
+```
+_____Serving RadishDB on 127.0.0.1:7272_____
+ _  ___  _ ___   ___  ___  ___  _  ___  _ _ 
+| ||_ _||// __> | . \| . || . \| |/ __>| | |
+| | | |   \__ \ |   /|   || | || |\__ \|   |
+|_| |_|   <___/ |_\_\|_|_||___/|_|<___/|_|_|
+```
