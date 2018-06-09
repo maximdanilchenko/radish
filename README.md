@@ -21,8 +21,7 @@ from radish.database import Server
 server = Server(host='127.0.0.1', port=7272)
 server.run()
 ```
-After that you will see an awesome output. 
-That means that server is ready for handling connections:
+After that you will see an awesome output: 
 ```
 _____Serving RadishDB on 127.0.0.1:7272_____
  _  ___  _ ___   ___  ___  ___  _  ___  _ _ 
@@ -30,6 +29,7 @@ _____Serving RadishDB on 127.0.0.1:7272_____
 | | | |   \__ \ |   /|   || | || |\__ \|   |
 |_| |_|   <___/ |_\_\|_|_||___/|_|<___/|_|_|
 ```
+That means that server is ready for handling connections.
 
 ##### Client with one connection:
 ```python
