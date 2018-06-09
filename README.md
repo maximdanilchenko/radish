@@ -3,7 +3,7 @@ _Inspired by [this article](http://charlesleifer.com/blog/building-a-simple-redi
 
 ![radish](https://user-images.githubusercontent.com/10708076/40731573-0343449c-643a-11e8-95f5-46a9fe9b901b.jpg)
 
-### ↈ [Contents](radish):
+## ↈ Contents:
 
 | Files | Description |
 | :--- | :---------- |
@@ -11,9 +11,8 @@ _Inspired by [this article](http://charlesleifer.com/blog/building-a-simple-redi
 | [database](radish/database) | Toy memory Storage with some most common REDIS operations and simple socket Server with asyncio |
 | [client](radish/client) | Client Connection and ConnectionPool implementation |
 
-
-### ↈ [Examples](examples) of usage:
-
+## ↈ Quick start
+### Server
 ##### Run RadishDB Server:
 ```python
 from radish.database import Server
@@ -31,9 +30,9 @@ _____Serving RadishDB on 127.0.0.1:7272_____
 ```
 That means that server is ready for handling connections.
 
+### Client
 ##### Client with one connection:
 ```python
-import asyncio
 from radish.client import Connection
 
 
@@ -51,11 +50,6 @@ async def run_client():
         assert await con.ping() == b'PONG'
         assert await con.exists('k2') == 1
         assert await con.flush() == 3
-
-
-loop = asyncio.get_event_loop()
-loop.run_until_complete(run_client())
-loop.close()
 ```
 
 ##### Client with connection pooling:
@@ -79,14 +73,11 @@ async def run_pool():
                               max_size=20) as pool:
         clients = [run_client(pool) for _ in range(10)]
         await asyncio.gather(*clients)
-
-
-loop = asyncio.get_event_loop()
-loop.run_until_complete(run_pool())
-loop.close()
 ```
 
-### ↈ Why?
+Find more examples [here](examples)
+
+## ↈ Why?
 After I read [this article](http://charlesleifer.com/blog/building-a-simple-redis-server-with-python/) 
 I was inspired to do something like it, but with asyncio, with more commands and 
 with whole client stuff (such as connection pool). 
@@ -102,7 +93,7 @@ and for benchmarking this whole solution
 - Connection Pool for client. It was most interesting part for me 
 and one of the causes I started this repo
 
-### ↈ Pypi package/usage in real tasks
+## ↈ Pypi package/usage in real tasks
 While Radish DB is in development it is not recommended to use it in some real tasks. 
 There are some things I should do before - benchmarks, tests and some fixes and issues are in backlog to implement.
 
