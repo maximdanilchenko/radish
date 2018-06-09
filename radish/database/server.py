@@ -27,7 +27,7 @@ class Server:
                 answer = Error(e.msg)
             except (RadishConnectionError, ConnectionError):
                 writer.close()
-                logging.debug(f'Connection  from {address} CLOSED')
+                logging.debug(f'Connection from  {address} CLOSED')
                 break
             logging.debug(f'Sent response to {address}: {answer}')
             await process_writer(writer, answer)
