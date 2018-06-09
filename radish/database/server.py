@@ -25,9 +25,9 @@ class Server:
                 answer = self.storage.process_command(*request)
             except RadishBadRequest as e:
                 answer = Error(e.msg)
-            except RadishConnectionError:
+            except (RadishConnectionError, ConnectionError):
                 writer.close()
-                logging.debug(f'Connection from {address} closed')
+                logging.debug(f'Connection  from {address} CLOSED')
                 break
             logging.debug(f'Sent response to {address}: {answer}')
             await process_writer(writer, answer)
