@@ -25,9 +25,9 @@ class Server:
                 answer = self.storage.process_command(*request)
             except RadishBadRequest as e:
                 answer = Error(e.msg)
-            except RadishConnectionError:
+            except (RadishConnectionError, ConnectionError):
                 writer.close()
-                logging.debug(f'Connection from {address} closed')
+                logging.debug(f'Connection from  {address} CLOSED')
                 break
             logging.debug(f'Sent response to {address}: {answer}')
             await process_writer(writer, answer)
@@ -36,13 +36,22 @@ class Server:
         if loop is None:
             loop = asyncio.get_event_loop()
 
-        coro = asyncio.start_server(self.handler, self.host, self.port, loop=loop)
+        coro = asyncio.start_server(self.handler,
+                                    self.host,
+                                    self.port,
+                                    loop=loop)
 
         server = loop.run_until_complete(coro)
-
-        print(f'Serving RadishDB on {server.sockets[0].getsockname()}')
-        logging.debug(f'Serving RadishDB on {server.sockets[0].getsockname()}')
-
+        host, port = server.sockets[0].getsockname()
+        address = f'Serving RadishDB on {host}:{port}'
+        print(f'\n{address:_^44}')
+        print('\n'.join([
+                    ' _  ___  _ ___   ___  ___  ___  _  ___  _ _ ',
+                    '| ||_ _||// __> | . \| . || . \| |/ __>| | |',
+                    '| | | |   \__ \ |   /|   || | || |\__ \|   |',
+                    '|_| |_|   <___/ |_\_\|_|_||___/|_|<___/|_|_|',
+                    ''
+                     ]))
         try:
             loop.run_forever()
         except KeyboardInterrupt:
