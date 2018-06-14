@@ -3,24 +3,11 @@ from itertools import chain
 from radish.exceptions import RadishClientError
 
 
-class FLayer:
+class CommandsMixin:
+    """ Mixin for executing commands with high level interface """
 
-    async def _execute(self, *args):
+    async def execute(self, *_):
         raise NotImplementedError
-
-    @staticmethod
-    def _to_bytes(arg):
-        if isinstance(arg, bytes):
-            return arg
-        elif isinstance(arg, str):
-            return arg.encode()
-        elif isinstance(arg, int):
-            return b'%d' % arg
-        else:
-            raise RadishClientError(b'Incorrect execute argument type')
-
-    async def execute(self, *args):
-        return await self._execute(*map(self._to_bytes, args))
 
     async def get(self, key):
         return await self.execute(b'GET', key)

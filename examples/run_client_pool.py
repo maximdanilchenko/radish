@@ -7,9 +7,9 @@ import random
 
 from radish.client import ConnectionPool, Connection
 
-POOL_SETTINGS = dict(host='127.0.0.1', port=7272, min_size=3, max_size=20)
-RANDOM_SLEEP = (0, 5)
-CLIENTS_COUNT = 10
+POOL_SETTINGS = dict(host='127.0.0.1', port=7272, min_size=1, max_size=10, inactive_time=300)
+RANDOM_SLEEP = (5, 15)
+CLIENTS_COUNT = 5
 
 
 async def run_client(pool: ConnectionPool):
@@ -19,6 +19,7 @@ async def run_client(pool: ConnectionPool):
         assert await con.get(random_key) == b'my_val'
         assert await con.ping() == b'PONG'
         await asyncio.sleep(random.randint(*RANDOM_SLEEP))
+        assert await con.ping() == b'PONG'
 
 
 async def run_pool():
