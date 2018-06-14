@@ -8,6 +8,7 @@ from .storage import RadishStore
 
 
 class Handler:
+
     def __init__(self,
                  server,
                  reader: asyncio.StreamReader,
@@ -43,7 +44,8 @@ class Handler:
 
     def _wait_inactive(self):
         if self.closing_delay and self._wait_closed is None:
-            self._wait_closed = self.server.loop.call_later(self.closing_delay, self.close_connection)
+            self._wait_closed = self.server.loop.call_later(
+                self.closing_delay, self.close_connection)
 
     def _cancel_inactive(self):
         if self._wait_closed:

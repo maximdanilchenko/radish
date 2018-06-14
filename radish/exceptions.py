@@ -2,6 +2,7 @@ from typing import Union
 
 
 class RadishError(Exception):
+
     def __init__(self, msg: Union[str, bytes] = b'Radish Error'):
         if isinstance(msg, str):
             self.msg = msg.encode()

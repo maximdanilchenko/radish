@@ -12,6 +12,7 @@ Stream = namedtuple('Stream', ['reader', 'writer'])
 
 
 class ConnectionPool:
+
     def __init__(self,
                  host='127.0.0.1',
                  port=7272,
@@ -130,6 +131,7 @@ class ConnectionPool:
 
 
 class PoolObjContext:
+
     def __init__(self, pool):
         self.pool = pool
         self.pool_obj = None
@@ -146,6 +148,7 @@ class PoolObjContext:
 
 
 class Connection(CommandsMixin):
+
     def __init__(self,
                  host='127.0.0.1',
                  port=7272, *,

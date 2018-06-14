@@ -3,6 +3,7 @@ from radish.exceptions import RadishBadRequest, RadishConnectionError
 
 class RadishStore:
     """ Python implementation of REDIS Storage """
+
     def __init__(self, store_obj: dict=None):
         self._store = store_obj or {}
         self.commands = {
