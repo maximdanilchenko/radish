@@ -57,7 +57,6 @@ async def run_client():
 ##### Client with connection pooling:
 ```python
 import asyncio
-import random
 
 from radish.client import ConnectionPool, Connection
 
@@ -65,15 +64,14 @@ from radish.client import ConnectionPool, Connection
 async def run_client(pool: ConnectionPool):
     async with pool.acquire() as con:  # type: Connection
         assert await con.ping() == b'PONG'
-        await asyncio.sleep(random.randint(0, 5))
 
 
 async def run_pool():
     async with ConnectionPool(host='127.0.0.1', 
                               port=7272, 
                               min_size=5, 
-                              max_size=20) as pool:
-        clients = [run_client(pool) for _ in range(10)]
+                              max_size=50) as pool:
+        clients = [run_client(pool) for _ in range(1000)]
         await asyncio.gather(*clients)
 ```
 

@@ -2,9 +2,15 @@ from radish.exceptions import RadishBadRequest, RadishConnectionError
 
 
 class RadishStore:
-    """ Python implementation of REDIS Storage """
+
+    __slots__ = '_store', 'commands'
 
     def __init__(self, store_obj: dict=None):
+        """
+        Python implementation of REDIS Storage
+
+        :param store_obj: dict like obj for storing storage values
+        """
         self._store = store_obj or {}
         self.commands = {
             b'GET': self.get,

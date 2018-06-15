@@ -13,6 +13,9 @@ Stream = namedtuple('Stream', ['reader', 'writer'])
 
 class ConnectionPool:
 
+    __slots__ = ('_loop', '_queue', '_clients',
+                 '_inited', '_closed', '_min_size')
+
     def __init__(self,
                  host='127.0.0.1',
                  port=7272,
@@ -132,6 +135,8 @@ class ConnectionPool:
 
 class PoolObjContext:
 
+    __slots__ = 'pool', 'pool_obj'
+
     def __init__(self, pool):
         self.pool = pool
         self.pool_obj = None
@@ -148,6 +153,10 @@ class PoolObjContext:
 
 
 class Connection(CommandsMixin):
+
+    __slots__ = ('host', 'port', '_stream', '_pool', '_connected',
+                 '_waiting', '_inactive_time', '_loop', '_acquired',
+                 'try_reconnect')
 
     def __init__(self,
                  host='127.0.0.1',

@@ -9,6 +9,9 @@ from .storage import RadishStore
 
 class Handler:
 
+    __slots__ = ('server', 'reader', 'writer', 'closing_delay',
+                 '_active', '_wait_closed', 'address')
+
     def __init__(self,
                  server,
                  reader: asyncio.StreamReader,
@@ -61,6 +64,9 @@ class Handler:
 
 class Server:
 
+    __slots__ = ('host', 'port', 'storage', 'closing_delay',
+                 'loop', 'active_connections')
+
     def __init__(self,
                  host: str='127.0.0.1',
                  port: int=7272,
@@ -72,6 +78,7 @@ class Server:
         self.storage = storage or RadishStore()
         self.closing_delay = closing_delay
         self.loop: asyncio.BaseEventLoop = loop or asyncio.get_event_loop()
+        self.active_connections = 0
 
     async def start_new_handler(self,
                                 reader: asyncio.StreamReader,
@@ -80,15 +87,24 @@ class Server:
                           reader=reader,
                           writer=writer,
                           closing_delay=self.closing_delay)
+
+        self.active_connections += 1
+        logging.info(f'New connection: {writer.get_extra_info("peername")}'
+                     f' | Total: {self.active_connections} connections')
+
         await handler.run()
+
+        self.active_connections -= 1
+        logging.info(f'Connection finished: {writer.get_extra_info("peername")}'
+                     f' | Total: {self.active_connections} connections')
 
     def run(self):
         coro = asyncio.start_server(self.start_new_handler,
                                     self.host,
                                     self.port,
                                     loop=self.loop)
-
         server = self.loop.run_until_complete(coro)
+
         host, port = server.sockets[0].getsockname()
         address = f'Serving RadishDB on {host}:{port}'
         print(f'\n{address:_^44}')
@@ -99,6 +115,7 @@ class Server:
                     '|_| |_|   <___/ |_\_\|_|_||___/|_|<___/|_|_|',
                     ''
                      ]))
+
         try:
             self.loop.run_forever()
         except KeyboardInterrupt:
