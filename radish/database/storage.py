@@ -7,7 +7,7 @@ class RadishStore:
 
     def __init__(self, store_obj: dict=None):
         """
-        Python implementation of REDIS Storage
+        Toy Python implementation of REDIS Storage (only in-memory)
 
         :param store_obj: dict like obj for storing storage values
         """
@@ -68,12 +68,12 @@ class RadishStore:
         return sum(1 if key in self._store else 0 for key in args)
 
     def echo(self, *args):
-        if not args:
+        if len(args) != 1:
             raise RadishBadRequest(b'Wrong number of arguments for ECHO')
         return args[0]
 
     def ping(self, *args):
-        if not args:
+        if len(args) != 1:
             return b'PONG'
         return args[0]
 

@@ -13,10 +13,10 @@ class Handler:
                  '_active', '_wait_closed', 'address')
 
     def __init__(self,
-                 server,
+                 server: 'Server',
                  reader: asyncio.StreamReader,
                  writer: asyncio.StreamWriter,
-                 closing_delay=None):
+                 closing_delay: int=None):
         self.server = server
         self.reader = reader
         self.writer = writer
@@ -27,9 +27,9 @@ class Handler:
 
     async def run(self):
         self._active = True
-        self._wait_inactive()
         while self._active:
             try:
+                self._wait_inactive()
                 request = await process_reader(self.reader)
                 self._cancel_inactive()
                 logging.debug(f'Got request from {self.address}: {request}')
@@ -43,7 +43,6 @@ class Handler:
                 break
             logging.debug(f'Sent response to {self.address}: {answer}')
             await process_writer(self.writer, answer)
-            self._wait_inactive()
 
     def _wait_inactive(self):
         if self.closing_delay and self._wait_closed is None:
@@ -80,7 +79,7 @@ class Server:
         self.loop: asyncio.BaseEventLoop = loop or asyncio.get_event_loop()
         self.active_connections = 0
 
-    async def start_new_handler(self,
+    async def _start_new_handler(self,
                                 reader: asyncio.StreamReader,
                                 writer: asyncio.StreamWriter):
         handler = Handler(self,
@@ -99,7 +98,7 @@ class Server:
                      f' | Total: {self.active_connections} connections')
 
     def run(self):
-        coro = asyncio.start_server(self.start_new_handler,
+        coro = asyncio.start_server(self._start_new_handler,
                                     self.host,
                                     self.port,
                                     loop=self.loop)
