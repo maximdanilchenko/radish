@@ -39,18 +39,18 @@ from radish.client import Connection
 
 
 async def run_client():
-    con = Connection(host='127.0.0.1', port=7272)
-    assert await con.set('my_key', 'my_val') == 1
-    assert await con.get('my_key') == b'my_val'
-    assert await con.echo('hello') == b'hello'
-    assert await con.delete('my_key') == 1
+    con = Connection(host="127.0.0.1", port=7272)
+    assert await con.set("my_key", "my_val") == 1
+    assert await con.get("my_key") == b"my_val"
+    assert await con.echo("hello") == b"hello"
+    assert await con.delete("my_key") == 1
     await con.close()
     # using "async with" statement:
-    async with Connection(host='127.0.0.1', port=7272) as con:
-        assert await con.mset(k1=1, k2=b'2', k3='3') == b'OK'
-        assert await con.mget('k1', 'k3', 'k2') == [b'1', b'3', b'2']
-        assert await con.ping() == b'PONG'
-        assert await con.exists('k2') == 1
+    async with Connection(host="127.0.0.1", port=7272) as con:
+        assert await con.mset(k1=1, k2=b"2", k3="3") == b"OK"
+        assert await con.mget("k1", "k3", "k2") == [b"1", b"3", b"2"]
+        assert await con.ping() == b"PONG"
+        assert await con.exists("k2") == 1
         assert await con.flush() == 3
 ```
 
@@ -63,11 +63,11 @@ from radish.client import ConnectionPool, Connection
 
 async def run_client(pool: ConnectionPool):
     async with pool.acquire() as con:  # type: Connection
-        assert await con.ping() == b'PONG'
+        assert await con.ping() == b"PONG"
 
 
 async def run_pool():
-    async with ConnectionPool(host='127.0.0.1', 
+    async with ConnectionPool(host="127.0.0.1",
                               port=7272, 
                               min_size=5, 
                               max_size=50) as pool:

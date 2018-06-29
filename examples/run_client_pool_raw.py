@@ -8,7 +8,7 @@ from typing import List
 
 from radish.client import ConnectionPool
 
-POOL_SETTINGS = dict(host='127.0.0.1', port=7272, min_size=5, max_size=10)
+POOL_SETTINGS = dict(host="127.0.0.1", port=7272, min_size=5, max_size=10)
 RANDOM_SLEEP = (0, 5)
 
 
@@ -33,7 +33,7 @@ def run(commands_lists):
     loop.close()
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     logger = logging.getLogger()
     logger.setLevel(logging.DEBUG)
     logger.addHandler(logging.StreamHandler())
@@ -41,28 +41,24 @@ if __name__ == '__main__':
     run(
         [
             [
-                [b'SET', b'key', b'val'],
-                [b'GET', b'key'],
-                [b'PING'],
-                [b'EXISTS', b'key', b'key', b'nokey'],
-                [b'EXISTS', b'key'],
-                [b'MSET', b'key1', b'val1', b'key2', b'val2'],
-                [b'EXISTS', b'key2'],
-                [b'ECHO', b'Hello!'],
-                [b'PING', b'Hello?'],
-                [b'PING'],
-                [b'FLUSHDB'],
+                [b"SET", b"key", b"val"],
+                [b"GET", b"key"],
+                [b"PING"],
+                [b"EXISTS", b"key", b"key", b"nokey"],
+                [b"EXISTS", b"key"],
+                [b"MSET", b"key1", b"val1", b"key2", b"val2"],
+                [b"EXISTS", b"key2"],
+                [b"ECHO", b"Hello!"],
+                [b"PING", b"Hello?"],
+                [b"PING"],
+                [b"FLUSHDB"],
             ],
             [
-                [b'SET', b'otherkey', b'val'],
-                [b'GET', b'otherkey'],
-                [b'DEL', b'otherkey'],
+                [b"SET", b"otherkey", b"val"],
+                [b"GET", b"otherkey"],
+                [b"DEL", b"otherkey"],
             ],
-            [
-                [b'PING'],
-                [b'GET', b'something'],
-                [b'DEL', b'some'],
-                [b'FLUSHDB'],
-            ],
-        ] * 5
+            [[b"PING"], [b"GET", b"something"], [b"DEL", b"some"], [b"FLUSHDB"]],
+        ]
+        * 5
     )
