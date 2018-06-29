@@ -19,7 +19,7 @@ _Inspired by [this article](http://charlesleifer.com/blog/building-a-simple-redi
 ```python
 from radish.database import Server
 
-server = Server(host='127.0.0.1', port=7272)
+server = Server(host="127.0.0.1", port=7272)
 server.run()
 ```
 After that you will see an awesome output: 
