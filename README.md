@@ -1,8 +1,6 @@
 # Radish 
 ##### Simple Redis-like DB and its client written in python3/asyncio
 
-_Inspired by [this article](http://charlesleifer.com/blog/building-a-simple-redis-server-with-python/)_
-
 ![radish](https://user-images.githubusercontent.com/10708076/40731573-0343449c-643a-11e8-95f5-46a9fe9b901b.jpg)
 
 ## ↈ Contents:
