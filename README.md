@@ -1,5 +1,6 @@
 # Radish 
-##### Simple in-memory DB and its client written in python3/asyncio for python3/asyncio 
+_Simple in-memory database and its client written in python3/asyncio for python3/asyncio_
+ 
 Supports ```string```, ```bytes```, ```int```, ```list```, ```tuple``` data types  
 
 ## Quick start
@@ -70,7 +71,7 @@ Find more examples [here](examples)
 
 | Files | Description |
 | :--- | :---------- |
-| [database](radish/database) | Toy memory Storage with some most common operations and socket Server with asyncio |
+| [database](radish/database) | Memory Storage with some most common operations and socket Server with asyncio |
 | [client](radish/client) | Client Connection and ConnectionPool implementations |
 | [protocol.py](radish/protocol.py) | Simplified to pythonic one RESP (REdis Serialization Protocol) realization |
 
