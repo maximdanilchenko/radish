@@ -8,21 +8,22 @@ from radish.exceptions import RadishClientError, RadishConnectionError
 from .commands import CommandsMixin
 
 
-Stream = namedtuple('Stream', ['reader', 'writer'])
+Stream = namedtuple("Stream", ["reader", "writer"])
 
 
 class ConnectionPool:
 
-    __slots__ = ('_loop', '_queue', '_clients',
-                 '_inited', '_closed', '_min_size')
+    __slots__ = ("_loop", "_queue", "_clients", "_inited", "_closed", "_min_size")
 
-    def __init__(self,
-                 host='127.0.0.1',
-                 port=7272,
-                 min_size=10,
-                 max_size=10,
-                 inactive_time=300,
-                 loop=None):
+    def __init__(
+        self,
+        host="127.0.0.1",
+        port=7272,
+        min_size=10,
+        max_size=10,
+        inactive_time=300,
+        loop=None,
+    ):
         """
         Radish connection pool holder.
 
@@ -67,10 +68,9 @@ class ConnectionPool:
         self._queue = asyncio.LifoQueue(maxsize=max_size, loop=self._loop)
         self._clients = []
         for _ in range(max_size):
-            cl = Connection(host=host,
-                            port=port,
-                            pool=self,
-                            inactive_time=inactive_time)
+            cl = Connection(
+                host=host, port=port, pool=self, inactive_time=inactive_time
+            )
             self._queue.put_nowait(cl)
             cl._acquired = False
             self._clients.append(cl)
@@ -83,8 +83,8 @@ class ConnectionPool:
         if self._inited:
             return None
         if self._closed:
-            raise RadishClientError('Pool is closed')
-        connect_tasks = [cl.connect() for cl in self._clients[-self._min_size:]]
+            raise RadishClientError("Pool is closed")
+        connect_tasks = [cl.connect() for cl in self._clients[-self._min_size :]]
         await asyncio.gather(*connect_tasks, loop=self._loop)
         self._inited = True
         return self
@@ -96,28 +96,28 @@ class ConnectionPool:
         self._check_inited()
         cl = await self._queue.get()
         cl._acquired = True
-        logging.debug(f'{cl} popped')
+        logging.debug(f"{cl} popped")
         return cl
 
     def release(self, entity):
         self._check_inited()
         self._queue.put_nowait(entity)
         entity._acquired = False
-        logging.debug(f'{entity} released')
+        logging.debug(f"{entity} released")
 
     async def close(self):
-        logging.debug(f'Start closing {self}..')
+        logging.debug(f"Start closing {self}..")
         self._check_inited()
         coros = [cl.close() for cl in self._clients]
         await asyncio.gather(*coros, loop=self._loop)
         self._closed = True
-        logging.debug(f'Done closing {self}')
+        logging.debug(f"Done closing {self}")
 
     def _check_inited(self):
         if not self._inited:
-            raise RadishClientError('Pool is not inited')
+            raise RadishClientError("Pool is not inited")
         if self._closed:
-            raise RadishClientError('Pool is closed')
+            raise RadishClientError("Pool is closed")
 
     async def __aenter__(self):
         await self._init()
@@ -130,12 +130,12 @@ class ConnectionPool:
         return self._init().__await__()
 
     def __repr__(self):
-        return f'<Pool {id(self)}>'
+        return f"<Pool {id(self)}>"
 
 
 class PoolObjContext:
 
-    __slots__ = 'pool', 'pool_obj'
+    __slots__ = "pool", "pool_obj"
 
     def __init__(self, pool):
         self.pool = pool
@@ -154,17 +154,29 @@ class PoolObjContext:
 
 class Connection(CommandsMixin):
 
-    __slots__ = ('host', 'port', '_stream', '_pool', '_connected',
-                 '_waiting', '_inactive_time', '_loop', '_acquired',
-                 'try_reconnect')
+    __slots__ = (
+        "host",
+        "port",
+        "_stream",
+        "_pool",
+        "_connected",
+        "_waiting",
+        "_inactive_time",
+        "_loop",
+        "_acquired",
+        "try_reconnect",
+    )
 
-    def __init__(self,
-                 host='127.0.0.1',
-                 port=7272, *,
-                 pool=None,
-                 inactive_time=300,
-                 loop=None,
-                 try_reconnect=True):
+    def __init__(
+        self,
+        host="127.0.0.1",
+        port=7272,
+        *,
+        pool=None,
+        inactive_time=300,
+        loop=None,
+        try_reconnect=True,
+    ):
         """
         Radish connection holder.
 
@@ -206,20 +218,20 @@ class Connection(CommandsMixin):
         self._connected = False
         self._waiting = None
         self._inactive_time = inactive_time
-        self._loop: asyncio.BaseEventLoop = (self._pool._loop if self._pool
-                                             else loop
-                                             or asyncio.get_event_loop())
+        self._loop: asyncio.BaseEventLoop = (
+            self._pool._loop if self._pool else loop or asyncio.get_event_loop()
+        )
         self._acquired = None
         self.try_reconnect = try_reconnect
 
     async def connect(self):
         self._cancel_inactive()
-        self._stream = Stream(*await asyncio.open_connection(self.host,
-                                                             self.port,
-                                                             loop=self._loop))
+        self._stream = Stream(
+            *await asyncio.open_connection(self.host, self.port, loop=self._loop)
+        )
         self._connected = True
         self._wait_inactive()
-        logging.debug(f'{self} connected')
+        logging.debug(f"{self} connected")
 
     async def _cancel_task(self):
         if self._inactive_time:
@@ -227,22 +239,22 @@ class Connection(CommandsMixin):
             await self.close()
 
     def _wait_inactive(self):
-        if (self._waiting is None
-                or self._waiting.cancelled()
-                or self._waiting.done()):
+        if self._waiting is None or self._waiting.cancelled() or self._waiting.done():
             self._waiting = asyncio.ensure_future(self._cancel_task())
 
     def _cancel_inactive(self):
-        if (self._waiting is not None
-                and not self._waiting.done()
-                and not self._waiting.cancelled()):
+        if (
+            self._waiting is not None
+            and not self._waiting.done()
+            and not self._waiting.cancelled()
+        ):
             self._waiting.cancel()
 
     async def close(self):
         self._cancel_inactive()
-        logging.debug(f'{self} start closing')
+        logging.debug(f"{self} start closing")
         if self._connected:
-            await self.execute(b'QUIT')
+            await self.execute(b"QUIT")
             # We should release connection from here because we have
             # case of usage from pool without "async with" statement
             if self._pool and self._acquired:
@@ -254,7 +266,7 @@ class Connection(CommandsMixin):
                 await self._waiting
             except asyncio.CancelledError:
                 pass
-        logging.debug(f'{self} closed')
+        logging.debug(f"{self} closed")
 
     async def execute(self, *args):
         self._cancel_inactive()
@@ -262,14 +274,14 @@ class Connection(CommandsMixin):
             await self.connect()
         try:
             await process_writer(self._stream.writer, args)
-            if args[0] == b'QUIT':
+            if args[0] == b"QUIT":
                 resp = None
                 self._stream.writer.close()
             else:
                 resp = await process_reader(self._stream.reader)
                 self._wait_inactive()
         except RadishConnectionError as e:
-            logging.error('Connection Error: %s', e.msg)
+            logging.error("Connection Error: %s", e.msg)
             if self._pool:
                 await self._pool.close()
             raise RadishClientError(e.msg)

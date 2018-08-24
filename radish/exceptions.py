@@ -1,9 +1,5 @@
-from typing import Union
-
-
 class RadishError(Exception):
-
-    def __init__(self, msg: Union[str, bytes] = 'Radish Error'):
+    def __init__(self, msg: str = "Radish Error"):
         self.msg = msg
 
 
