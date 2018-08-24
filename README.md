@@ -1,7 +1,7 @@
 # Radish 
 _Simple in-memory database and its client written in python3/asyncio for python3/asyncio_
  
-Supports ```string```, ```bytes```, ```int```, ```list```, ```tuple``` data types  
+Supports ```str```, ```bytes```, ```int```, ```list```, ```tuple``` data types  
 
 ## Quick start
 ### Server
