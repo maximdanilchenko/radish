@@ -20,8 +20,8 @@ async def run_client(pool: ConnectionPool):
     async with pool.acquire() as con:  # type: Connection
         random_key = f'key_{random.randint(0, 10000)}'
         await con.set(key=random_key, value='my_val')
-        assert await con.get(random_key) == b'my_val'
-        assert await con.ping() == b'PONG'
+        assert await con.get(random_key) == 'my_val'
+        assert await con.ping() == 'PONG'
 
 
 async def run_pool():

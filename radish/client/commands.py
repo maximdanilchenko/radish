@@ -38,7 +38,7 @@ class CommandsMixin:
     async def mset(self, *args, **kwargs):
         if len(args) % 2:
             raise RadishClientError(
-                b'Incorrect args number. Should be even (key: value)')
+                'Incorrect args number. Should be even (key: value)')
         return await self.execute(b'MSET', *args, *chain(*kwargs.items()))
 
     async def mget(self, *keys):

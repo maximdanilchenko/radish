@@ -83,7 +83,7 @@ class ConnectionPool:
         if self._inited:
             return None
         if self._closed:
-            raise RadishClientError(b'Pool is closed')
+            raise RadishClientError('Pool is closed')
         connect_tasks = [cl.connect() for cl in self._clients[-self._min_size:]]
         await asyncio.gather(*connect_tasks, loop=self._loop)
         self._inited = True
@@ -115,9 +115,9 @@ class ConnectionPool:
 
     def _check_inited(self):
         if not self._inited:
-            raise RadishClientError(b'Pool is not inited')
+            raise RadishClientError('Pool is not inited')
         if self._closed:
-            raise RadishClientError(b'Pool is closed')
+            raise RadishClientError('Pool is closed')
 
     async def __aenter__(self):
         await self._init()
@@ -256,7 +256,7 @@ class Connection(CommandsMixin):
                 pass
         logging.debug(f'{self} closed')
 
-    async def _execute(self, *args):
+    async def execute(self, *args):
         self._cancel_inactive()
         if not self._connected:
             await self.connect()
@@ -276,7 +276,7 @@ class Connection(CommandsMixin):
         except ConnectionError as e:
             if self.try_reconnect:
                 self._connected = False
-                return await self._execute(*args)
+                return await self.execute(*args)
             if self._pool:
                 await self._pool.close()
             raise e
@@ -289,20 +289,6 @@ class Connection(CommandsMixin):
 
     async def __aexit__(self, *exc):
         await self.close()
-
-    @staticmethod
-    def _to_bytes(arg):
-        if isinstance(arg, bytes):
-            return arg
-        elif isinstance(arg, str):
-            return arg.encode()
-        elif isinstance(arg, int):
-            return b'%d' % arg
-        else:
-            raise RadishClientError(b'Incorrect execute argument type')
-
-    async def execute(self, *args):
-        return await self._execute(*map(self._to_bytes, args))
 
     def __repr__(self):
         return f'<Connection {id(self)} {self._pool if self._pool else ""}>'

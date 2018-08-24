@@ -34,7 +34,7 @@ class Handler:
                 self._cancel_inactive()
                 logging.debug(f'Got request from {self.address}: {request}')
                 if not isinstance(request, list):
-                    raise RadishBadRequest(b'Bad request format')
+                    raise RadishBadRequest('Bad request format')
                 answer = self.server.storage.process_command(*request)
             except RadishBadRequest as e:
                 answer = Error(e.msg)
@@ -80,8 +80,8 @@ class Server:
         self.active_connections = 0
 
     async def _start_new_handler(self,
-                                reader: asyncio.StreamReader,
-                                writer: asyncio.StreamWriter):
+                                 reader: asyncio.StreamReader,
+                                 writer: asyncio.StreamWriter):
         handler = Handler(self,
                           reader=reader,
                           writer=writer,
@@ -117,9 +117,9 @@ class Server:
 
         try:
             self.loop.run_forever()
-        except KeyboardInterrupt:
-            pass
+        finally:
+            server.close()
+            self.loop.run_until_complete(server.wait_closed())
+            self.loop.close()
 
-        server.close()
-        self.loop.run_until_complete(server.wait_closed())
-        self.loop.close()
+
